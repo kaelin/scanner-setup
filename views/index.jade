@@ -1,0 +1,21 @@
+extends layout
+
+block content
+  :markdown
+    # #{title}
+    This application sets up a **Scan to FTP/Network Profile** on the **Brother MFC-9130CW** multifunction printer located in Karen's office.
+
+    Your IP address is **#{ip}**
+
+  div#profiles
+    p Fetching profiles from the printer…
+
+  script(src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js')
+  script.
+    console.log('Hello Jade!');
+    $.get('/profiles', {}, function(data) {
+      $.each(data, function(i, profile) {
+        var name = profile.name == '' ? '[Unused]' : profile.name;
+        $('#profiles').append('<p>' + i + ': <a href=' + profile.href + '>' + name + '</a></p>');
+      });
+    });
