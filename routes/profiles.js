@@ -6,6 +6,7 @@ var baseurl = 'http://example.com';
 var cheerio = require('cheerio');
 var http = require('http');
 var redis = require('redis');
+var request = require('request');
 
 // Keep a redis connection for caching profile data
 var cache = redis.createClient();
@@ -36,22 +37,6 @@ actor.on('ready', function() {
   actor.subscribe('scanner-setup.profiles');
 });
 
-// TODO: Use the request module instead of this fetch function…
-
-function fetch(url, callback) {
-  http.get(url, function(res) {
-    var data = "";
-    res.on('data', function (chunk) {
-      data += chunk;
-    });
-    res.on("end", function() {
-      callback(data);
-    });
-  }).on("error", function() {
-    callback(null);
-  });
-}
-
 function sendReply(res, reply) {
   res.setHeader("Cache-Control", "no-cache, no-store");
   res.setHeader("Pragma", "no-cache");
@@ -70,9 +55,9 @@ router.get('/', function(req, res) {
     }
     var path = '/scan/scanprofile.html';
     debug('Fetching profiles from <' + baseurl + path + '> ...');
-    fetch(baseurl + path, function(data) {
+    request(baseurl + path, function(err, response, data) {
       var reply = { error: 'Error fetching profiles from <' + baseurl + path + '>' };
-      if (data) {
+      if (!err && response.statusCode == 200) {
         var $ = cheerio.load(data);
         $('table.contents > tr.under > th').each(function(i, elt) {
           var definition = elt.next.children[0].children[0];
