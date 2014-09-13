@@ -12,9 +12,11 @@ var cache = redis.createClient();
 cache.on('ready', function() {
   debug('Connection to redis is ready');
   cache.hget('db:scanner-setup', 'select', function(err, DB) {
+    if (err) throw err;
     debug('Select redis db ' + DB);
     cache.select(DB);
     cache.get('config:baseurl', function(err, url) {
+      if (err) throw err;
       debug('My config:baseurl is <' + url + '>');
       baseurl = url;
     });
@@ -60,6 +62,8 @@ router.get('/', function(req, res) {
       });
       reply = profiles;
     }
+    res.setHeader("Cache-Control", "no-cache, no-store");
+    res.setHeader("Pragma", "no-cache");
     res.send(reply);
     debug('Fetch completed')
   });
