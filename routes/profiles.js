@@ -2,15 +2,23 @@ var debug = require('debug')('scanner-setup');
 var express = require('express');
 var router = express.Router();
 
-var baseurl = 'http://brw342387ae07f5.local.';
+var baseurl = 'http://example.com';
 var cheerio = require('cheerio');
 var http = require('http');
 var redis = require('redis');
 
 // Keep a redis connection for caching profile data
 var cache = redis.createClient();
-cache.on('idle', function() {
-  debug('Connection to redis is idle');
+cache.on('ready', function() {
+  debug('Connection to redis is ready');
+  cache.hget('db:scanner-setup', 'select', function(err, DB) {
+    debug('Select redis db ' + DB);
+    cache.select(DB);
+    cache.get('config:baseurl', function(err, url) {
+      debug('My config:baseurl is <' + url + '>');
+      baseurl = url;
+    });
+  });
 });
 
 // TODO: Use the request module instead of this fetch function…
