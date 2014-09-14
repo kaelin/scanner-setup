@@ -7,15 +7,19 @@ block content
 
     Your IP address is **#{ip}**
 
-  div#profiles
-    p Fetching profiles from the printer…
+  table#profiles
+    tbody
+      tr
+        td(width='25px', height='25px')
+          div#spinner
+        th Fetching profiles…
 
-  script(src='//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js')
   script.
     console.log('Hello Jade!');
     $.get('/profiles', {}, function(data) {
       $.each(data, function(i, profile) {
         var name = profile.name == '' ? '[Unused]' : profile.name;
-        $('#profiles').append('<p>' + i + ': <a href=' + profile.href + '>' + name + '</a></p>');
+        $('#profiles').append('<tr><td>' + i + ':</td><td><a href=' + profile.href + '>' + name + '</a></td></tr>');
       });
+      $('#spinner').fadeOut('slow', function() { $('#profiles>tbody>tr>th').text('Scan to FTP/Network Profiles'); });
     });

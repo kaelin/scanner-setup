@@ -33,9 +33,21 @@ actor.on('ready', function() {
   });
   actor.on('message', function(topic, msg) {
     debug('Received ' + topic + ' ' + msg);
+    switch (topic) {
+      case 'scanner-setup.profiles':
+        fetchProfile(msg);
+        break;
+    }
   });
   actor.subscribe('scanner-setup.profiles');
 });
+
+function fetchProfile(msg) {
+  cache.hget(msg, 'href', function(err, href) {
+    if (err) throw err;
+    debug(href);
+  });
+}
 
 function sendReply(res, reply) {
   res.setHeader("Cache-Control", "no-cache, no-store");
