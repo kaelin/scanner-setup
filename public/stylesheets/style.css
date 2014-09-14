@@ -3,8 +3,11 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
 
-a {
-  color: #00B7FF;
+/* http://stuffandnonsense.co.uk/blog/about/improve_your_web_typography_with_baseline_shift */
+.icon-label {
+  position: relative;
+  left: .3em;
+  top: -.3em;
 }
 
 #spinner {
