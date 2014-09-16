@@ -1,25 +1,45 @@
 extends layout
 
+block jumbotron
+  div.row
+    div.col-md-9
+      :markdown
+        # #{title}
+        This application sets up a **Scan to FTP/Network Profile** on the **Brother MFC-9130CW** multifunction printer located in Karen's office.
+
+        Your IP address is **#{ip}**
+    div.col-md-3
+      br
+      img.img-rounded.pull-right(src='images/Brother_MFC-9130CW.png')
+
 block content
-  :markdown
-    # #{title}
-    This application sets up a **Scan to FTP/Network Profile** on the **Brother MFC-9130CW** multifunction printer located in Karen's office.
-
-    Your IP address is **#{ip}**
-
-  table#profiles
-    tbody
-      tr
-        td(width='25px', height='25px')
-          div#spinner
-        th Fetching profiles…
+  div.row
+    div.col-md-3
+      table#profiles
+        tbody
+          tr
+            td(width='25px', height='25px')
+              div#spinner
+            th#refresh Fetching profiles…
+    div.col-md-9
+      iframe(name='iframe', width='100%', height='700px')
 
   script.
-    console.log('Hello Jade!');
     $.get('/profiles', {}, function(data) {
       $.each(data, function(i, profile) {
         var name = profile.name == '' ? '[Unused]' : profile.name;
-        $('#profiles').append('<tr><td>' + i + ':</td><td><a href=' + profile.href + '>' + name + '</a></td></tr>');
+        var row = $('<tr><td align="right">' + (1 + i) + ':&nbsp;</td><td><a class="profile-link"/></td></tr>');
+        row.find('.profile-link').attr({ href: profile.href, target: 'iframe' }).text(name);
+        $('#profiles').append(row);
       });
-      $('#spinner').fadeOut('slow', function() { $('#profiles>tbody>tr>th').text('Scan to FTP/Network Profiles'); });
+      $('#spinner').fadeOut('slow', function() { $('#refresh').text('Scan to FTP/Network Profiles'); });
+    });
+
+    $('#profiles').on('iframe-load', function(event, params) {
+      console.log('iframe-load: ' + JSON.stringify(params));
+    });
+
+    $('iframe').load(function() {
+      console.log('iframe was (re)loaded');
+      $('#profiles').trigger('iframe-load', { src: $('iframe').attr('src') });
     });

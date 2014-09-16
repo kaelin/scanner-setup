@@ -43,9 +43,24 @@ actor.on('ready', function() {
 });
 
 function fetchProfile(msg) {
-  cache.hget(msg, 'href', function(err, href) {
+  cache.hmget(msg, ['assignable', 'admin-href'], function(err, values) {
     if (err) throw err;
-    debug(href);
+    if (values[0] == 'true') { // Values are returned as strings…
+      var href = values[1];
+      request(href, function(err, response, data) {
+        debug('Fetch profile response: ' + response.statusCode);
+        if (!err && response.statusCode == 200) {
+          var $ = cheerio.load(data);
+          var snippit = $('form');
+          snippit.attr('action', baseurl + '/scan/profile_ftp.html');
+          $('body').remove();
+          $('html').append($('<body />').append(snippit));
+          // debug($.html());
+          cache.hset(msg, 'form', $.html());
+        }
+      });
+      debug(href);
+    }
   });
 }
 
@@ -57,6 +72,13 @@ function sendReply(res, reply) {
 
 /* GET profiles listing. */
 router.get('/', function(req, res) {
+  if (req.query.id) {
+    cache.hget('brother-profile:' + req.query.id, 'form', function(err, form) {
+      if (form) sendReply(res, form);
+      else sendReply(res, JSON.stringify(err));
+    });
+    return;
+  }
   cache.get('brother-profiles', function(err, data) {
     var profiles = [];
     if (data) {
@@ -75,12 +97,15 @@ router.get('/', function(req, res) {
           var definition = elt.next.children[0].children[0];
           if (definition) {
             definition = { name: definition.data, assignable: true };
+            definition['href'] = '/profiles?id=' + i;
           }
           else {
             definition = { name: '', assignable: false };
+            definition['href'] = baseurl + elt.next.children[0].attribs['href'];
           }
-          definition['href'] = baseurl + elt.next.children[0].attribs['href'];
+          definition['admin-href'] = baseurl + elt.next.children[0].attribs['href'];
           profiles.push(definition);
+          cache.del('brother-profile:' + i);
           cache.hmset('brother-profile:' + i, definition);
           cache.publish('scanner-setup.profiles', 'brother-profile:' + i);
         });
