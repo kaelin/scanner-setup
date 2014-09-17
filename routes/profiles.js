@@ -75,7 +75,7 @@ router.get('/', function(req, res) {
   if (req.query.id) {
     cache.hget('brother-profile:' + req.query.id, 'form', function(err, form) {
       if (form) sendReply(res, form);
-      else sendReply(res, JSON.stringify(err));
+      else res.render('try-again', { title: 'Try Again' });
     });
     return;
   }
